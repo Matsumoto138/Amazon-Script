@@ -27,6 +27,7 @@ col_order = []
 new_file_col = []
 col_url = ""
 counter = 0
+color = ""
 
 # declare a drive
 options = webdriver.ChromeOptions()
@@ -50,7 +51,7 @@ for i in range (0, 1):
     driver.get(col_data[i])
     time.sleep(5)
     for file in os.listdir(os.path.dirname(__file__)):
-        print(file)
+        
         if file.endswith(".zip"):
             
             with ZipFile(file, 'r') as zip:
@@ -61,9 +62,12 @@ for i in range (0, 1):
             
             name = os.path.basename(fileJson)
             jsonName = os.path.splitext(name)[0]
-            print(jsonName)
+            
             f = open(jsonName+".json")
             data = json.load(f)
-            for i in data:
-                print(i)
+            print(data["customizationData"]["children"][0]["children"][0]["optionSelection"]["label"])
+            print(data["customizationData"]["children"][0]["children"][1]["optionSelection"]["label"])
+            print(data["customizationData"]["children"][0]["children"][2]["children"][0]["inputValue"])
+            # for i in data:
+            #     print(i)
 
