@@ -14,22 +14,26 @@ from zipfile import ZipFile
 import json
 import time
 
-# Open Excel File
+# Excel dosyası aç
 wb = load_workbook('Amazon Order.xlsx')
 wb2 = Workbook()
 ws = wb.active
 ws2 = wb2.active
 ws2.title = "Data"
 
-# Declare variables
+# Değişkenleri tanımla
 col_data = []
 col_order = []
 new_file_col = []
 col_url = ""
 counter = 0
+title = ""
 color = ""
+length = ""
+customization = ""
 
-# declare a drive
+
+# drive tanımla
 options = webdriver.ChromeOptions()
 options.add_argument("--start-maximized")
 prefs = {"profile.default_content_settings.popups": 0,
@@ -40,16 +44,24 @@ options.add_experimental_option("prefs", prefs)
 driver=webdriver.Chrome("./chromedriver/chromedriver.exe", options=options)
 
 
-# Take Urls and append to col_data
+# Url al ve col data'ya ekle
 for row in range(2, ws.max_row + 1):
     col_order.append(ws["B"+ str(row)].value)
     col_data.append(ws["AI" + str(row)].value)
     
 
-# File Loop
-for i in range (0, 1):
-    driver.get(col_data[i])
-    time.sleep(5)
+# Dosya Loop
+for i in col_data:
+
+    #dosyaları indir
+    try:
+        driver.get(i)
+    except:
+        ws2.append(["","","",""])
+        continue
+    time.sleep(3)
+
+    # .zip dosyasını bul ve içindekileri çıkart
     for file in os.listdir(os.path.dirname(__file__)):
         
         if file.endswith(".zip"):
@@ -57,6 +69,7 @@ for i in range (0, 1):
             with ZipFile(file, 'r') as zip:
                 zip.extractall()
             
+    # Çıkartılan dosyalar içinde .json dosyasını bul ve bilgileri diziye ekle
     for fileJson in os.listdir(os.path.dirname(__file__)):
         if fileJson.endswith(".json"):
             
@@ -65,9 +78,26 @@ for i in range (0, 1):
             
             f = open(jsonName+".json")
             data = json.load(f)
-            print(data["customizationData"]["children"][0]["children"][0]["optionSelection"]["label"])
-            print(data["customizationData"]["children"][0]["children"][1]["optionSelection"]["label"])
-            print(data["customizationData"]["children"][0]["children"][2]["children"][0]["inputValue"])
-            # for i in data:
-            #     print(i)
 
+            try:
+                title = data["title"]
+                color= data["customizationData"]["children"][0]["children"][0]["optionSelection"]["label"]
+                length= data["customizationData"]["children"][0]["children"][1]["optionSelection"]["label"]
+                customization= data["customizationData"]["children"][0]["children"][2]["children"][0]["inputValue"]
+            except:
+                ws2.append([title,"","",""])
+                f.close()
+                continue
+
+            ws2.append([title, color, length, customization])
+            wb2.save("Amazon New Order.xlsx")
+            f.close()
+            time.sleep(3)
+            
+    for deleteFile in os.listdir(os.path.dirname(__file__)):
+        if deleteFile.endswith(".json") or deleteFile.endswith(".zip") or deleteFile.endswith(".xml"):
+            try:
+                os.remove(deleteFile)
+            except:
+                time.sleep(3)
+    
